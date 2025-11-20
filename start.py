@@ -1,7 +1,8 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, colorchooser
 from datetime import datetime, date
 from tkcalendar import Calendar
+
 
 class CalendarDialog(tk.Toplevel):
     def __init__(self, master, initial_date=None):
@@ -112,8 +113,57 @@ class BookingApp:
         self.clear_mode = False
         self.backup_state = None
 
+        # --- NEU: Style und Grundfarbe -----------------------------------
+        self.style = ttk.Style(self.root)
+        # Startfarbe (Standard-Hintergrund des Fensters)
+        self.primary_color = self.root.cget("bg")
+
+        self._create_menubar()
         self.build_ui()
+        self.apply_colors()  # Styles an die Startfarbe anpassen
         self.update_rows_from_checks()
+
+    # --- NEU: Menü + Colorwheel ------------------------------------------
+
+    def _create_menubar(self):
+        menubar = tk.Menu(self.root)
+
+        settings_menu = tk.Menu(menubar, tearoff=0)
+        settings_menu.add_command(
+            label="Farbschema...",
+            command=self.choose_color
+        )
+        menubar.add_cascade(label="Einstellungen", menu=settings_menu)
+
+        self.root.config(menu=menubar)
+
+    def choose_color(self):
+        """Öffnet den Farb-Dialog (RGB-Colorwheel) und aktualisiert die UI."""
+        color = colorchooser.askcolor(
+            initialcolor=self.primary_color,
+            parent=self.root,
+            title="Farbschema wählen"
+        )[1]
+        if color:
+            self.primary_color = color
+            self.apply_colors()
+
+    def apply_colors(self):
+        """Wendet die aktuell gewählte Farbe auf die wichtigsten Styles an."""
+        # Hintergrund des Hauptfensters
+        self.root.configure(bg=self.primary_color)
+
+        # ttk-Styles global anpassen (wir verwenden Standard-Styles)
+        self.style.configure("TFrame", background=self.primary_color)
+        self.style.configure("TLabelframe", background=self.primary_color)
+        self.style.configure("TLabel", background=self.primary_color)
+        self.style.configure("TCheckbutton", background=self.primary_color)
+        # Buttons und andere Controls – je nach Theme wird background
+        # nicht immer 1:1 übernommen, aber es gibt i.d.R. einen sichtbaren Effekt.
+        self.style.configure("TButton", background=self.primary_color)
+        self.style.configure("TMenubutton", background=self.primary_color)
+
+    # --- UI-Aufbau --------------------------------------------------------
 
     def build_ui(self):
         main = ttk.Frame(self.root, padding=10)
